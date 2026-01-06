@@ -1,6 +1,7 @@
 name: Build & Release Go Binaries
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*"
@@ -22,17 +23,17 @@ jobs:
             goarch: amd64
             ext: ""
           - os: macos-intel
-            runner: macos-latest
+            runner: ubuntu-latest
             goos: darwin
             goarch: amd64
             ext: ""
           - os: macos-arm
-            runner: macos-latest
+            runner: ubuntu-latest
             goos: darwin
             goarch: arm64
             ext: ""
           - os: windows
-            runner: windows-latest
+            runner: ubuntu-latest
             goos: windows
             goarch: amd64
             ext: ".exe"

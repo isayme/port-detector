@@ -1,0 +1,7 @@
+PROTO = "协议"
+PROTO_1 = "TCP"
+PORT = "端口"
+PID = "PID"
+PROCESS = "应用名"
+CMDLINE = "启动命令"
+LOCAL_ADDR = "监听IP"

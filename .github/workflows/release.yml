@@ -17,10 +17,15 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: linux
+          - os: linux-amd64
             runner: ubuntu-latest
             goos: linux
             goarch: amd64
+            ext: ""
+          - os: linux-arm64
+            runner: ubuntu-latest
+            goos: linux
+            goarch: arm64
             ext: ""
           - os: macos-intel
             runner: ubuntu-latest

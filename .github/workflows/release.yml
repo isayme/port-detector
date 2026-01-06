@@ -64,6 +64,7 @@ jobs:
     name: Publish Release
     needs: build
     runs-on: ubuntu-latest
+    if: github.ref_type == 'tag'
 
     steps:
       - name: Download artifacts

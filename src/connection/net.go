@@ -5,15 +5,15 @@ import (
 	"sort"
 	"syscall"
 
+	"github.com/samber/lo"
 	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/process"
 )
 
 type ListenPortInfo struct {
-	Fd         string
-	Family     string
+	Family     uint32
 	Type       uint32
-	Proto      string
+	Proto      uint32
 	Port       uint32
 	PID        int32
 	ProcName   string
@@ -42,10 +42,9 @@ func ListeningPorts() ([]ListenPortInfo, error) {
 		}
 
 		info := ListenPortInfo{
-			//Proto:     langs.Localize(fmt.Sprintf("PROTO_%d", c.Type)),
 			Type:      c.Type,
-			Family:    formatFamily(c.Family),
-			Proto:     formatProto(c.Type),
+			Family:    c.Family,
+			Proto:     c.Type,
 			Port:      c.Laddr.Port,
 			PID:       c.Pid,
 			LocalAddr: c.Laddr.IP,
@@ -68,6 +67,10 @@ func ListeningPorts() ([]ListenPortInfo, error) {
 		result = append(result, info)
 	}
 
+	result = lo.UniqBy(result, func(item ListenPortInfo) string {
+		return fmt.Sprintf("type_%s/port_%d", item.Type, item.Port)
+	})
+
 	sort.Slice(result, func(i, j int) bool {
 		x := result[i]
 		y := result[j]
@@ -80,30 +83,4 @@ func ListeningPorts() ([]ListenPortInfo, error) {
 	})
 
 	return result, nil
-}
-
-var protoMap = map[uint32]string{
-	syscall.SOCK_STREAM: "TCP",
-	syscall.SOCK_DGRAM:  "UDP",
-}
-
-func formatProto(proto uint32) string {
-	if v, ok := protoMap[proto]; ok {
-		return v
-	}
-
-	return fmt.Sprintf("%d", proto)
-}
-
-var familyMap = map[uint32]string{
-	syscall.AF_INET:  "IPv4",
-	syscall.AF_INET6: "IPv6",
-}
-
-func formatFamily(family uint32) string {
-	if v, ok := familyMap[family]; ok {
-		return v
-	}
-
-	return fmt.Sprintf("%d", family)
 }

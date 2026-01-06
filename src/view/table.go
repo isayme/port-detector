@@ -3,50 +3,58 @@ package view
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"time"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/dustin/go-humanize"
 	"github.com/isayme/port-detector/src/connection"
 	"github.com/isayme/port-detector/src/langs"
 )
 
 type model struct {
 	table table.Model
+
+	keys keyMap
+	help help.Model
+
 	pause bool
 }
 
 func tickCmd() tea.Cmd {
 	return tea.Tick(time.Second, func(t time.Time) tea.Msg {
-		return MsgRefresh(0)
+		return tickMsg{}
 	})
 }
 
 func (m model) Init() tea.Cmd {
-	// return nil
-	return tea.Batch(
-		// fetchTableData(),
-		tickCmd(),
-	)
+	// 启动第一个定时器
+	return tickCmd()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case MsgRefresh:
+	case tickMsg:
 		ports, _ := connection.ListeningPorts()
 		m.table.SetRows(convertToRows(ports))
+		return m, tickCmd()
 	case tea.WindowSizeMsg:
 		m.table.SetColumns(getColumns(msg.Width))
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "ctrl+c":
+		switch {
+		case key.Matches(msg, m.keys.Help):
+			// toggle help
+			m.help.ShowAll = !m.help.ShowAll
+		case key.Matches(msg, m.keys.Quit):
+			//	quit
 			return m, tea.Quit
-		case "p":
+		case key.Matches(msg, m.keys.Pause):
+			//	toggle refresh data
 			m.pause = !m.pause
-		case "r":
+		case key.Matches(msg, m.keys.Refresh):
+			// manual refresh data
 			ports, _ := connection.ListeningPorts()
 			m.table.SetRows(convertToRows(ports))
 		}
@@ -57,29 +65,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	helpView := m.help.View(m.keys)
+
 	return lipgloss.NewStyle().Padding(1, 2).Render(m.table.View()) +
-		"\nPress q to quit, pause: " + strconv.FormatBool(m.pause)
-}
-
-func getColumns(width int) []table.Column {
-	cmdLineWidth := width
-
-	columns := []table.Column{
-		{Title: "FAMILY", Width: 6},
-		{Title: langs.Localize("PROTO"), Width: 5},
-		{Title: langs.Localize("PORT"), Width: 6},
-		{Title: langs.Localize("LOCAL_ADDR"), Width: 15},
-		{Title: langs.Localize("PID"), Width: 6},
-		{Title: langs.Localize("PROCESS"), Width: 14},
-		{Title: "EXTRA", Width: 50},
-	}
-
-	for _, item := range columns {
-		cmdLineWidth = cmdLineWidth - item.Width
-	}
-	columns = append(columns, table.Column{Title: langs.Localize("CMDLINE"), Width: cmdLineWidth})
-
-	return columns
+		"\n" + fmt.Sprintf("auto refresh: %s", formatSwitch(!m.pause)) +
+		"\n" + helpView
+	//return lipgloss.NewStyle().Padding(1, 2).Render(m.table.View()) +
+	//	"\nPress q to quit, pause: " + strconv.FormatBool(m.pause)
 }
 
 func newModel(rows []table.Row) model {
@@ -94,6 +86,9 @@ func newModel(rows []table.Row) model {
 		BorderStyle(lipgloss.NormalBorder()).
 		BorderForeground(lipgloss.Color("240")).
 		BorderBottom(true).
+		BorderTop(true).
+		//BorderLeft(true).
+		//BorderRight(true).
 		Bold(true)
 
 	style.Selected = style.Selected.
@@ -102,49 +97,50 @@ func newModel(rows []table.Row) model {
 
 	t.SetStyles(style)
 
-	m := model{table: t}
-
-	go func() {
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-
-		for {
-			<-ticker.C
-
-			if m.pause {
-				// continue
-			}
-			// ports, _ := connection.ListeningPorts()
-			// m.table.SetRows(convertToRows(ports))
-			triggerRefreshTableData()
-		}
-	}()
+	m := model{
+		table: t,
+		help:  help.New(),
+		keys:  keys,
+	}
 
 	return m
 }
 
-func triggerRefreshTableData() tea.Cmd {
-	return func() tea.Msg {
-		// 模拟耗时操作（如 HTTP 请求、DB 查询）
+func getColumns(width int) []table.Column {
+	cmdLineWidth := width
 
-		return MsgRefresh(0)
+	columns := []table.Column{
+		//{Title: "FAMILY", Width: 6},
+		{Title: langs.Localize("PROTO"), Width: 5},
+		{Title: langs.Localize("PORT"), Width: 6},
+		{Title: langs.Localize("LOCAL_ADDR"), Width: 15},
+		{Title: langs.Localize("PID"), Width: 6},
+		{Title: langs.Localize("USER"), Width: 10},
+		{Title: langs.Localize("CPU"), Width: 10},
+		{Title: langs.Localize("MEM"), Width: 6},
+		{Title: langs.Localize("PROCESS"), Width: cmdLineWidth},
 	}
+
+	//for _, item := range columns {
+	//	cmdLineWidth = cmdLineWidth - item.Width
+	//}
+	//columns = append(columns, table.Column{Title: langs.Localize("CMDLINE"), Width: cmdLineWidth})
+
+	return columns
 }
 
 func convertToRows(ports []connection.ListenPortInfo) []table.Row {
 	rows := make([]table.Row, 0, len(ports))
 	for _, p := range ports {
 		rows = append(rows, table.Row{
-			p.Family,
-			p.Proto,
-			strconv.Itoa(int(p.Port)),
+			formatProto(p.Proto),
+			formatUint32(p.Port),
 			p.LocalAddr,
-			strconv.Itoa(int(p.PID)),
+			formatInt32(p.PID),
+			p.Username,
+			formatCPU(p.CPUPercent),
+			formatMEM(p.MemInfo),
 			p.ProcName,
-			p.Cmdline,
-			fmt.Sprintf("user: %s, cpu: %0.2f%%, mem: %s", p.Username, p.CPUPercent,
-				humanize.Bytes(p.MemInfo.RSS),
-			),
 		})
 	}
 

@@ -1,3 +1,3 @@
 package view
 
-type MsgRefresh int
+type tickMsg struct{}

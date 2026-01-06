@@ -53,6 +53,7 @@ func Setup() {
 	initBundle()
 
 	initLocalizer(DefaultLanguage.String())
+	//initLocalizer(language.SimplifiedChinese.String())
 }
 
 func Localize(id string) string {

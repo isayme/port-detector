@@ -5,11 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/table"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
+	"charm.land/bubbles/v2/table"
+	tea "charm.land/bubbletea/v2"
+	lipgloss "charm.land/lipgloss/v2"
 	"github.com/isayme/port-detector/src/connection"
 	"github.com/isayme/port-detector/src/langs"
 )
@@ -42,7 +42,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tickCmd()
 	case tea.WindowSizeMsg:
 		m.table.SetColumns(getColumns(msg.Width))
-	case tea.KeyMsg:
+		m.table.SetWidth(msg.Width)
+		// m.table.SetHeight(msg.Height)
+	case tea.KeyPressMsg:
 		switch {
 		case key.Matches(msg, m.keys.Help):
 			// toggle help
@@ -64,14 +66,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m model) View() string {
+func (m model) View() tea.View {
 	helpView := m.help.View(m.keys)
 
-	return lipgloss.NewStyle().Padding(1, 2).Render(m.table.View()) +
-		"\n" + fmt.Sprintf("auto refresh: %s", formatSwitch(!m.pause)) +
-		"\n" + helpView
-	//return lipgloss.NewStyle().Padding(1, 2).Render(m.table.View()) +
-	//	"\nPress q to quit, pause: " + strconv.FormatBool(m.pause)
+	return tea.NewView(
+		lipgloss.NewStyle().Padding(1, 2).Render(m.table.View()) +
+			"\n" + fmt.Sprintf("auto refresh: %s", formatSwitch(!m.pause)) +
+			"\n" + helpView)
 }
 
 func newModel(rows []table.Row) model {

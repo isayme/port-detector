@@ -9,7 +9,7 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
-	github.com/samber/lo v1.52.0
+	github.com/samber/lo v1.53.0
 	github.com/shirou/gopsutil/v4 v4.26.3
 	golang.org/x/text v0.36.0
 )

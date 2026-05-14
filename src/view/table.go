@@ -43,7 +43,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.table.SetColumns(getColumns(msg.Width))
 		m.table.SetWidth(msg.Width)
-		// m.table.SetHeight(msg.Height)
+		m.table.SetHeight(msg.Height - 4)
 	case tea.KeyPressMsg:
 		switch {
 		case key.Matches(msg, m.keys.Help):
@@ -66,12 +66,32 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+func (m model) pageIndicator() string {
+	totalRows := len(m.table.Rows())
+	pageHeight := m.table.Height()
+	if pageHeight < 1 {
+		pageHeight = 1
+	}
+	if totalRows <= pageHeight {
+		return ""
+	}
+	currentPage := m.table.Cursor()/pageHeight + 1
+	totalPages := (totalRows + pageHeight - 1) / pageHeight
+	return fmt.Sprintf("Page %d/%d (%d rows total)  ", currentPage, totalPages, totalRows)
+}
+
 func (m model) View() tea.View {
 	helpView := m.help.View(m.keys)
+
+	pageHint := m.pageIndicator()
+	if pageHint != "" {
+		pageHint = "\n" + pageHint
+	}
 
 	return tea.NewView(
 		lipgloss.NewStyle().Padding(1, 2).Render(m.table.View()) +
 			"\n" + fmt.Sprintf("auto refresh: %s", formatSwitch(!m.pause)) +
+			pageHint +
 			"\n" + helpView)
 }
 

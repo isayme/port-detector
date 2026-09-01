@@ -11,7 +11,7 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/samber/lo v1.53.0
 	github.com/shirou/gopsutil/v4 v4.26.4
-	golang.org/x/text v0.40.0
+	golang.org/x/text v0.41.0
 )
 
 require (

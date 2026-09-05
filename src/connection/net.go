@@ -68,7 +68,7 @@ func ListeningPorts() ([]ListenPortInfo, error) {
 	}
 
 	result = lo.UniqBy(result, func(item ListenPortInfo) string {
-		return fmt.Sprintf("type_%s/port_%d", item.Type, item.Port)
+		return fmt.Sprintf("type_%d/port_%d", item.Type, item.Port)
 	})
 
 	sort.Slice(result, func(i, j int) bool {

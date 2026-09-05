@@ -21,6 +21,7 @@ type model struct {
 	help help.Model
 
 	pause bool
+	nonRootWarning bool
 }
 
 func tickCmd() tea.Cmd {
@@ -88,8 +89,18 @@ func (m model) View() tea.View {
 		pageHint = "\n" + pageHint
 	}
 
+	warningMsg := ""
+	if m.nonRootWarning {
+		warningMsg = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("11")).
+			Bold(true).
+			Render("Warning: Running as non-root user. Only ports you have permission to see will be displayed.")
+		warningMsg = "\n" + warningMsg + "\n"
+	}
+
 	return tea.NewView(
 		lipgloss.NewStyle().Padding(1, 2).Render(m.table.View()) +
+			warningMsg +
 			"\n" + fmt.Sprintf("auto refresh: %s", formatSwitch(!m.pause)) +
 			pageHint +
 			"\n" + helpView)
@@ -168,6 +179,10 @@ func convertToRows(ports []connection.ListenPortInfo) []table.Row {
 	return rows
 }
 
+func isRoot() bool {
+	return os.Getuid() == 0
+}
+
 func Render() {
 	ports, err := connection.ListeningPorts()
 	if err != nil {
@@ -176,6 +191,7 @@ func Render() {
 	}
 
 	m := newModel(convertToRows(ports))
+	m.nonRootWarning = !isRoot()
 
 	if _, err := tea.NewProgram(m).Run(); err != nil {
 		fmt.Println("failed to start:", err)

@@ -1,6 +1,6 @@
 module github.com/isayme/port-detector
 
-go 1.25.5
+go 1.26.0
 
 require (
 	charm.land/bubbles/v2 v2.2.1
@@ -11,7 +11,7 @@ require (
 	github.com/nicksnyder/go-i18n/v2 v2.6.1
 	github.com/samber/lo v1.53.0
 	github.com/shirou/gopsutil/v4 v4.26.4
-	golang.org/x/text v0.41.0
+	golang.org/x/text v0.42.0
 )
 
 require (
@@ -35,6 +35,6 @@ require (
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 )

@@ -1,11 +1,11 @@
 module github.com/isayme/port-detector
 
-go 1.26.0
+go 1.26.7
 
 require (
 	charm.land/bubbles/v2 v2.2.1
 	charm.land/bubbletea/v2 v2.1.0
-	charm.land/lipgloss/v2 v2.0.5
+	charm.land/lipgloss/v2 v2.1.0
 	github.com/BurntSushi/toml v1.6.0
 	github.com/dustin/go-humanize v1.1.0
 	github.com/nicksnyder/go-i18n/v2 v2.7.0
